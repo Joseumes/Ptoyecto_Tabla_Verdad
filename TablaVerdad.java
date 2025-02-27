@@ -82,3 +82,45 @@ public class TablaVerdad {
         }
         scanner.close();
     }
+    private static void generarTablaVerdad(String[] variables, String[] expresiones) {
+        int n = variables.length;
+        int filas = (int) Math.pow(2, n);
+
+        System.out.print("| ");
+        for (String var : variables) {
+            System.out.print(var + " | ");
+        }
+        for (String expr : expresiones) {
+            System.out.print(expr + " | ");
+        }
+        System.out.println("\n" + "-".repeat((variables.length + expresiones.length) * 6));
+
+        for (int i = 0; i < filas; i++) {
+            int[] valores = new int[n];
+            for (int j = 0; j < n; j++) {
+                valores[j] = (i >> (n - 1 - j)) & 1;
+            }
+
+            System.out.print("| ");
+            for (int v : valores) {
+                System.out.print(v + " | ");
+            }
+
+            for (String expresion : expresiones) {
+                int resultado = ExpresionLogica.evaluarExpresion(expresion, variables, valores);
+                System.out.print(resultado + " | ");
+            }
+            System.out.println();
+        }
+    }
+
+    private static int leerEntero(Scanner scanner) {
+        while (true) {
+            try {
+                return Integer.parseInt(scanner.nextLine().trim());
+            } catch (NumberFormatException e) {
+                System.out.print("Entrada no válida. Ingrese un número entero: ");
+            }
+        }
+    }
+}
