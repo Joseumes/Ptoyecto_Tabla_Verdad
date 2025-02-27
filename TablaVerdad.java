@@ -63,3 +63,22 @@ public class TablaVerdad {
                         System.out.println("Error: Solo se permiten hasta 3 variables.");
                     }
                 } while (variables.length > 3);
+                String[] expresiones;
+                do {
+                    System.out.print("Ingrese las expresiones lógicas (máx 3, separadas por comas): ");
+                    expresiones = scanner.nextLine().replace(" ", "").split(",");
+                    if (expresiones.length > 3) {
+                        System.out.println("Error: Solo se permiten hasta 3 expresiones.");
+                    }
+                } while (expresiones.length > 3);
+
+                generarTablaVerdad(variables, expresiones);
+            } else if (opcion == 2) {
+                System.out.println("Programa finalizado...");
+                break;
+            } else {
+                System.out.println("Opción no válida. Intente de nuevo.");
+            }
+        }
+        scanner.close();
+    }
