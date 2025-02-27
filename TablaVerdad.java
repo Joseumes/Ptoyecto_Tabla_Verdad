@@ -54,3 +54,12 @@ public class TablaVerdad {
                 """);
             System.out.print("Seleccione una opción: ");
             int opcion = leerEntero(scanner);
+            if (opcion == 1) {
+                String[] variables;
+                do {
+                    System.out.print("Ingrese las variables a utilizar (máx 3, separadas por comas): ");
+                    variables = scanner.nextLine().replace(" ", "").split(",");
+                    if (variables.length > 3) {
+                        System.out.println("Error: Solo se permiten hasta 3 variables.");
+                    }
+                } while (variables.length > 3);
