@@ -55,22 +55,12 @@ public class TablaVerdad {
             System.out.print("Seleccione una opción: ");
             int opcion = leerEntero(scanner);
             if (opcion == 1) {
-                String[] variables;
-                do {
-                    System.out.print("Ingrese las variables a utilizar (máx 3, separadas por comas): ");
-                    variables = scanner.nextLine().replace(" ", "").split(",");
-                    if (variables.length > 3) {
-                        System.out.println("Error: Solo se permiten hasta 3 variables.");
-                    }
-                } while (variables.length > 3);
-                String[] expresiones;
-                do {
-                    System.out.print("Ingrese las expresiones lógicas (máx 3, separadas por comas): ");
-                    expresiones = scanner.nextLine().replace(" ", "").split(",");
-                    if (expresiones.length > 3) {
-                        System.out.println("Error: Solo se permiten hasta 3 expresiones.");
-                    }
-                } while (expresiones.length > 3);
+                String[] variables = solicitarVariables(scanner);
+                String[] expresiones = solicitarExpresiones(scanner, variables);
+
+                if (!validarVariables(variables, expresiones) || !validarEstructuraExpresiones(expresiones)) {
+                    continue; // Vuelve al menú principal si hay un error
+                }
 
                 generarTablaVerdad(variables, expresiones);
             } else if (opcion == 2) {
@@ -82,19 +72,85 @@ public class TablaVerdad {
         }
         scanner.close();
     }
+
+    private static String[] solicitarVariables(Scanner scanner) {
+        String[] variables;
+        do {
+            System.out.print("Ingrese las variables a utilizar (máx 3, separadas por comas): ");
+            String input = scanner.nextLine().trim().replaceAll("\\s+", ""); // Elimina espacios
+            variables = input.split(",");
+            if (variables.length > 3 || Arrays.stream(variables).anyMatch(v -> v.length() != 1 || !Character.isLetter(v.charAt(0)))) {
+                System.out.println("Error: Solo se permiten hasta 3 variables válidas (letras individuales).");
+            }
+        } while (variables.length > 3 || Arrays.stream(variables).anyMatch(v -> v.length() != 1 || !Character.isLetter(v.charAt(0))));
+        return variables;
+    }
+
+    private static String[] solicitarExpresiones(Scanner scanner, String[] variables) {
+        String[] expresiones;
+        do {
+            System.out.println("Operadores lógicos disponibles:");
+            System.out.println("• Conjunción : Use '&&'' (ejemplo: p&&q)");
+            System.out.println("• Disyunción : Use '||' (ejemplo: p||q)");
+            System.out.println("• Disyunción excluyente: Use '!=' (ejemplo: p!=q)");
+            System.out.println("• Condicional : Use '<=' (ejemplo: p<=q)");
+            System.out.println("• Bicondicional : Use '==' (ejemplo: p==q)");
+            System.out.println();
+            System.out.println("Ingrese las expresiones lógicas utilizando los operadores anteriores.");
+            System.out.println("Recuerde que solo se permiten estructuras básicas con un máximo de 2 variables.");
+            System.out.println();
+            System.out.print("Ingrese las expresiones lógicas (máx 3, separadas por comas): ");
+            String input = scanner.nextLine().trim().replaceAll("\\s+", ""); // Elimina espacios
+            expresiones = input.split(",");
+            if (expresiones.length > 3) {
+                System.out.println("Error: Solo se permiten hasta 3 expresiones.");
+            }
+        } while (expresiones.length > 3);
+        return expresiones;
+    }
+
+    private static boolean validarVariables(String[] variables, String[] expresiones) {
+        Set<String> variableSet = new HashSet<>(Arrays.asList(variables));
+        for (String expresion : expresiones) {
+            for (char c : expresion.toCharArray()) {
+                if (Character.isLetter(c) && !variableSet.contains(String.valueOf(c))) {
+                    System.out.println("Error: La variable '" + c + "' no fue ingresada previamente.");
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
+    private static boolean validarEstructuraExpresiones(String[] expresiones) {
+        for (String expresion : expresiones) {
+            long variableCount = expresion.chars()
+                                          .filter(Character::isLetter)
+                                          .distinct()
+                                          .count();
+            if (variableCount > 2) {
+                System.out.println("Error: La expresión '" + expresion + "' contiene más de 2 variables.");
+                return false;
+            }
+        }
+        return true;
+    }
+
     private static void generarTablaVerdad(String[] variables, String[] expresiones) {
         int n = variables.length;
         int filas = (int) Math.pow(2, n);
 
+        // Encabezado de la tabla
         System.out.print("| ");
         for (String var : variables) {
-            System.out.print(var + " | ");
+            System.out.printf("%-2s | ", var);
         }
         for (String expr : expresiones) {
-            System.out.print(expr + " | ");
+            System.out.printf("%-6s | ", expr);
         }
-        System.out.println("\n" + "-".repeat((variables.length + expresiones.length) * 6));
+        System.out.println("\n" + "-".repeat((variables.length * 5) + (expresiones.length * 8)));
 
+        // Filas de la tabla
         for (int i = 0; i < filas; i++) {
             int[] valores = new int[n];
             for (int j = 0; j < n; j++) {
@@ -103,12 +159,12 @@ public class TablaVerdad {
 
             System.out.print("| ");
             for (int v : valores) {
-                System.out.print(v + " | ");
+                System.out.printf("%-2d | ", v);
             }
 
             for (String expresion : expresiones) {
                 int resultado = ExpresionLogica.evaluarExpresion(expresion, variables, valores);
-                System.out.print(resultado + " | ");
+                System.out.printf("%-6d | ", resultado);
             }
             System.out.println();
         }
@@ -119,51 +175,8 @@ public class TablaVerdad {
             try {
                 return Integer.parseInt(scanner.nextLine().trim());
             } catch (NumberFormatException e) {
-                System.out.print("Entrada no válida. Ingrese un número entero: ");
-            }
-        }
-    }
-    private static void generarTablaVerdad(String[] variables, String[] expresiones) {
-        int n = variables.length;
-        int filas = (int) Math.pow(2, n);
-
-        System.out.print("| ");
-        for (String var : variables) {
-            System.out.print(var + " | ");
-        }
-        for (String expr : expresiones) {
-            System.out.print(expr + " | ");
-        }
-        System.out.println("\n" + "-".repeat((variables.length + expresiones.length) * 6));
-
-        for (int i = 0; i < filas; i++) {
-            int[] valores = new int[n];
-            for (int j = 0; j < n; j++) {
-                valores[j] = (i >> (n - 1 - j)) & 1;
-            }
-
-            System.out.print("| ");
-            for (int v : valores) {
-                System.out.print(v + " | ");
-            }
-
-            for (String expresion : expresiones) {
-                int resultado = ExpresionLogica.evaluarExpresion(expresion, variables, valores);
-                System.out.print(resultado + " | ");
-            }
-            System.out.println();
-        }
-    }
-
-    private static int leerEntero(Scanner scanner) {
-        while (true) {
-            try {
-                return Integer.parseInt(scanner.nextLine().trim());
-            } catch (NumberFormatException e) {
-                System.out.print("Entrada no válida. Ingrese un número entero: ");
+                System.out.print("Entrada no válida. Ingrese un número entero: ");
             }
         }
     }
 }
-
-
